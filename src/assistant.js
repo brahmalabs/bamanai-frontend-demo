@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './Assistant.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faAngleDown } from '@fortawesome/free-solid-svg-icons';
 
 const Assistant = () => {
   const { id } = useParams();
@@ -12,6 +14,7 @@ const Assistant = () => {
   const [showOwnContent, setShowOwnContent] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`http://127.0.0.1:5000/get_assistant/${id}`, {
@@ -100,7 +103,18 @@ const Assistant = () => {
   }
 
   return (
-    <div className="assistant-container">
+    <div className="assistant-container text-slate-800">
+      <div className='flex flex-row justify-between w-full border-b-2 border-teal-600 pb-2 pl-4 pt-2'>
+        <h1 className="text-2xl font-bold text-left">
+          <span onClick={() => navigate('/')} className='border-b-2 border-teal-600 hover:cursor-pointer'> BamanAI </span> / 
+          <span onClick={() => navigate('/teacher')} className='border-b-2 border-teal-600 hover:cursor-pointer'> Assistants</span> / 
+          <span className="text-teal-600"> {assistant.id} </span>
+        </h1>
+        <div className='flex flex-row bg-teal-200 rounded-full p-1 me-4'>
+          <img src={assistant.profile_picture || 'https://robohash.org/bamanai'} className='w-7 h-7 rounded-full hover:cursor-pointer' onClick={() => navigate('/teacher')} />
+          <FontAwesomeIcon icon={faAngleDown} className='w-4 h-4 rounded-full hover:cursor-pointer align-baseline pt-2' onClick={() => navigate('/teacher')} />
+        </div>
+      </div>
       <div className="top-section">
         <div className="left-section">
           <div className="left-top">
