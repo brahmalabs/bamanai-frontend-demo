@@ -1,3 +1,100 @@
+
+/* Sidebar */
+.sidebar {
+  width: 18%;
+  max-width: 250px;
+  height: 100%;
+  position: fixed;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.profile-section {
+  text-align: center;
+}
+
+.profile-picture {
+  width: 50%;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  margin:auto
+}
+
+.links {
+  width: 100%;
+  text-align: center;
+}
+
+.link {
+  display: block;
+  text-decoration: none;
+}
+
+.bottom-links {
+  margin-top: auto;
+  width: 100%;
+  text-align: center;
+}
+
+.add-assistant-button {
+  width: 80%;
+  margin: 10px auto;
+}
+
+/* Main content */
+.main-content {
+  margin-left: 18%;
+  width: 82%;
+  height: 100%;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Existing styles */
+.teacher-dashboard {
+  height: 100%;
+}
+
+.assistants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.assistant-card {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  width: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.assistant-card h2 {
+  margin: 0 0 10px;
+}
+
+.assistant-card p {
+  margin: 0 0 20px;
+}
+
+.open-assistant-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.open-assistant-button:hover {
+  background-color: #218838;
+}
+
 /* Modal container */
 .modal {
   display: flex;
@@ -76,63 +173,4 @@
 
 .modal-content button:hover {
   background-color: #45a049;
-}
-
-/* Teacher Dashboard */
-.teacher-dashboard {
-  padding: 20px;
-}
-
-/* Add Assistant Button */
-.add-assistant-button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  margin-bottom: 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.add-assistant-button:hover {
-  background-color: #0056b3;
-}
-
-/* Assistant Cards */
-.assistants {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.assistant-card {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  width: 200px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.assistant-card h2 {
-  margin: 0 0 10px;
-}
-
-.assistant-card p {
-  margin: 0 0 20px;
-}
-
-/* Open Assistant Button */
-.open-assistant-button {
-  background-color: #28a745;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.open-assistant-button:hover {
-  background-color: #218838;
 }

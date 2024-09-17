@@ -10,7 +10,7 @@ const Welcome = () => {
     const googleToken = response.credential;
 
     const url = userType === 'teacher' ? '/verify-teacher' : '/verify-student';
-    const redirectPath = userType === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+    const redirectPath = userType === 'teacher' ? '/teacher' : '/student';
 
     try {
       const res = await fetch(`http://127.0.0.1:5000${url}`, {
