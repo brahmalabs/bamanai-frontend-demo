@@ -20,6 +20,7 @@
 .left-top, .left-bottom {
   flex: 1;
   overflow: auto;
+  max-height: 224px;
 }
 
 .right-section {
@@ -28,7 +29,7 @@
   overflow: hidden;
 }
 
-.upload-button {
+/* .upload-button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -39,16 +40,14 @@
 
 .upload-button:hover {
   background-color: #0056b3;
-}
+} */
 
 .left-bottom input {
-  padding: 10px;
   margin-bottom: 10px;
-  border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.left-bottom button {
+/* .left-bottom button {
   padding: 10px 20px;
   background-color: #28a745;
   color: white;
@@ -59,7 +58,7 @@
 
 .left-bottom button:hover {
   background-color: #218838;
-}
+} */
 
 .left-bottom ul {
   list-style-type: none;
@@ -75,6 +74,7 @@
   justify-content: space-around;
   padding: 10px;
   border-bottom: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
 }
 
 .tab-switcher button {
@@ -139,18 +139,18 @@
 }
 
 /* Ensure the buttons have consistent styling */
-.upload-button {
+/* .upload-button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
+} */
 
-.upload-button:hover {
+/* .upload-button:hover {
   background-color: #0056b3;
-}
+} */
 
 .popup-overlay {
   position: fixed;
@@ -214,4 +214,49 @@
 .digest-content, .digest-summary, .digest-questions {
   color: #888;
   font-size: 0.875rem;
+}
+
+.dropzone {
+  padding: 10px 0px 30px 0px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+.tooltip .tooltiptext::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 400px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 2px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -200px;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
