@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCrown, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCrown, faCircleQuestion, faSignOut } from '@fortawesome/free-solid-svg-icons';
 import './TeacherDashboard.css';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
@@ -145,6 +145,11 @@ const TeacherDashboard = () => {
     navigate(`/assistant/${id}`);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('jwt_token');
+    navigate('/');
+  };
+
   return (
     <div className="teacher-dashboard w-full h-full">
       <div className="sidebar text-slate-800">
@@ -160,6 +165,7 @@ const TeacherDashboard = () => {
         <div className="bottom-links mb-2">
           <a href="#" className="link text-left flex items-center pl-4 hover:bg-teal-100"><FontAwesomeIcon icon={faCrown} className="text-teal-600" />   Upgrade</a>
           <a href="#" className="link text-left flex items-center pl-4 hover:bg-teal-100"><FontAwesomeIcon icon={faCircleQuestion} className="text-teal-600" />   Help Center</a>
+          <button className="logout-button mt-4 w-3/4 mx-auto rounded-md bg-red-600 text-white hover:bg-red-700" onClick={handleLogout}>Logout <FontAwesomeIcon icon={faSignOut} className="text-white"/></button>
         </div>
       </div>
       <div className="main-content text-slate-800">
