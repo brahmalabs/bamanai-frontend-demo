@@ -172,7 +172,7 @@ const TeacherDashboard = () => {
         <h1 className="text-2xl font-bold text-left mb-4 border-b-2 border-teal-600 pb-2"><span onClick={() => navigate('/')} className='border-b-2 border-teal-600 hover:cursor-pointer'> BamanAI</span> /  <span className="text-teal-600">Assistants</span></h1>
         <div className="assistants">
           {assistants.map(assistant => (
-            <div key={assistant.id} className="assistant-card text-black" onClick={() => handleOpenAssistant(assistant.id)}>
+            <div key={assistant.id} className="assistant-card overflow-hidden pb-1 text-slate-800 hover:cursor-pointer" onClick={() => handleOpenAssistant(assistant.id)}>
               <img src={assistant.profile_picture || 'https://robohash.org/bamanai'} alt="Profile" className="assistant-profile-picture w-1/2 h-1/2 mx-auto" />
               <h2 className="text-teal-600 text-center text-xl"> {assistant.subject} | {assistant.class_name} </h2>
               <p className="text-left text-sm text-ellipsis">{assistant.about}</p>

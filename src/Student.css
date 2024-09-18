@@ -1,32 +1,67 @@
-.student-dashboard {
-  padding: 20px;
-}
 
-.assistants {
+.assistants-s {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
 
-.assistant-card {
+.assistant-card-s {
   background-color: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 20px;
-  width: 200px;
+  padding: 16px;
+  width: 250px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
   cursor: pointer;
 }
 
-.assistant-card:hover {
+.assistant-card-s:hover {
   background-color: #e9e9e9;
 }
 
-.assistant-card h2 {
-  margin: 0 0 10px;
+.assistant-card-s img {
+  width:100%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  margin: auto;
+  object-fit: cover;
 }
 
-.assistant-card p {
-  margin: 0 0 10px;
+/* Tooltip container */
+.tooltip-s {
+  position: relative;
+  display: inline-block;
+}
+.tooltip-s .tooltiptext-s::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}
+/* Tooltip text */
+.tooltip-s .tooltiptext-s {
+  visibility: hidden;
+  width: 200px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 2px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  top: 115%;
+  left: 50%;
+  margin-left: -100px;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip-s:hover .tooltiptext-s {
+  visibility: visible;
 }

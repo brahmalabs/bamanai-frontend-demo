@@ -305,13 +305,13 @@ const Assistant = () => {
             <h3 className='text-xl font-bold text-left'>
               Upload {showOwnContent ? 'Own' : 'Supporting'} Files (Max 100MB) 
               <div className='tooltip'>
-              <FontAwesomeIcon 
-                icon={faInfoCircle} 
-                className='w-4 h-4 rounded-full hover:cursor-pointer align-baseline pt-2' 
-              />
-              <div className="tooltiptext text-sm">
-                  {showOwnContent ? "Own files are the personal creations of a teacher that is used by AI to also create personality os the assitant besides being used for answering questions. Files can be self written notes, videos etc." : "Supporting files are files that are used to answer questions. These are not personal creations of the teacher. File can be textbook, articles, other videos etc."}
-              </div>
+                <FontAwesomeIcon 
+                  icon={faInfoCircle} 
+                  className='w-4 h-4 rounded-full hover:cursor-pointer align-baseline pt-2' 
+                />
+                <div className="tooltiptext text-sm">
+                    {showOwnContent ? "Own files are the personal creations of a teacher that is used by AI to also create personality os the assitant besides being used for answering questions. Files can be self written notes, videos etc." : "Supporting files are files that are used to answer questions. These are not personal creations of the teacher. File can be textbook, articles, other videos etc."}
+                </div>
               </div>
             </h3>
             <div {...getRootProps({ className: 'dropzone border-2 border-dashed border-teal-600 rounded-md p-4 mb-2 h-2 text-sm p-0' })}>

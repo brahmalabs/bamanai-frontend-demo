@@ -1,6 +1,6 @@
 .chat-container {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 54px);
 }
 
 .chat-section {
@@ -77,34 +77,24 @@
   border-bottom: 1px solid #ddd;
 }
 
-.tab-switcher button {
-  padding: 10px 20px;
+.sidebar {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar .p-4 {
+  padding: 1rem;
+}
+
+.sidebar .border-b {
+  border-bottom-width: 1px;
+}
+
+.sidebar .hover\:bg-gray-100:hover {
+  background-color: #f7fafc;
+}
+
+.sidebar .cursor-pointer {
   cursor: pointer;
-}
-
-.references {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.reference-card {
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.reference-card h3 {
-  margin: 0 0 5px;
-}
-
-.reference-card p {
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .popup-overlay {
