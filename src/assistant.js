@@ -28,7 +28,7 @@ const Assistant = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
   const editPopupRef = useRef(null);
-
+  const [teacherInfo, setTeacherInfo] = useState(null);
   useEffect(() => {
     fetch(`http://127.0.0.1:5000/get_assistant/${id}`, {
       headers: {
@@ -43,6 +43,21 @@ const Assistant = () => {
     })
     .catch(error => {
       console.error('Error fetching assistant:', error);
+      toastr.error('Error fetching assistant:', error);
+    });
+
+    fetch(`http://127.0.0.1:5000/get_teacher_info`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      setTeacherInfo(data.teacher);
+    })
+    .catch(error => {
+      console.error('Error fetching teacher info:', error);
+      toastr.error('Error fetching teacher info:', error);
     });
   }, [id]);
 
@@ -218,6 +233,10 @@ const Assistant = () => {
   const { getRootProps: getEditImageRootProps, getInputProps: getEditImageInputProps } = useDropzone({ onDrop: handleEditImageDrop });
 
   const handleSaveEdit = () => {
+    const checkedChannels = Object.entries(teacherInfo.channels)
+      .filter(([key, channel]) => channel?.profile?.is_connected && document.querySelector(`input[name="${key}"]`).checked)
+      .map(([key, channel]) => channel._id);
+
     fetch(`http://127.0.0.1:5000/edit_assistant/${id}`, {
       method: 'POST',
       headers: {
@@ -228,7 +247,8 @@ const Assistant = () => {
         subject: editSubject,
         class_name: editClassName,
         about: editAbout,
-        profile_picture: editImageUrl
+        profile_picture: editImageUrl,
+        connected_channels: checkedChannels // Include checked channels
       })
     })
     .then(response => response.json())
@@ -239,7 +259,8 @@ const Assistant = () => {
           subject: editSubject,
           class_name: editClassName,
           about: editAbout,
-          profile_picture: editImageUrl
+          profile_picture: editImageUrl,
+          connected_channels: checkedChannels // Update local state with checked channels
         }));
         setShowEditPopup(false);
         toastr.success('Assistant updated successfully');
@@ -284,6 +305,25 @@ const Assistant = () => {
   if (!assistant) {
     return <div>Loading...</div>;
   }
+
+  const handleChannelChange = (e) => {
+    console.log(e.target.value, e.target.checked)
+    const channelId = e.target.value;
+    const isChecked = e.target.checked;
+    const name = e.target.name;
+
+    setAssistant(prev => {
+      const updatedChannels = isChecked
+        ? [...prev.connected_channels, {name, '_id': channelId}]
+        : prev.connected_channels.filter(channel => channel._id != channelId);
+
+      return {
+        ...prev,
+        connected_channels: updatedChannels
+      };
+    });
+  };
+  
 
   return (
     <div className="assistant-container text-slate-800 w-full">
@@ -424,6 +464,22 @@ const Assistant = () => {
               About:
               <textarea value={editAbout} onChange={(e) => setEditAbout(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
             </label>
+            <h3 className="text-sm font-bold text-slate-500 text-left">Connected Channels:</h3>
+            {Object.entries(teacherInfo.channels).map(([key, channel]) => (
+                channel?.profile?.is_connected && (
+                <div className="modal-label text-slate-800 text-left flex flex-row" key={key}>
+                  <input
+                    type="checkbox"
+                    name={key}
+                    className='w-2/12 accent-teal-600'
+                    checked={assistant.connected_channels.map(c => c._id).includes(channel?._id)}
+                    value={channel?._id}
+                    onChange={handleChannelChange}
+                  />
+                  <p className='ml-2 w-10/12'>{key.charAt(0).toUpperCase() + key.slice(1)}</p>
+                </div>
+                )
+            ))}
             <button onClick={handleSaveEdit} className="bg-teal-600 text-white rounded-md p-2 mt-4 w-full hover:bg-teal-700">Save</button>
           </div>
         </div>

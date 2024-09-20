@@ -19,6 +19,13 @@ const TeacherDashboard = () => {
   const [teacherInfo, setTeacherInfo] = useState({});
   const navigate = useNavigate();
   const popupRef = useRef(null);
+  const [showWAPopup, setShowWAPopup] = useState(false);
+  const [waFormData, setWaFormData] = useState({
+    phone_number: '',
+    app_id: '',
+    app_secret: '',
+    access_token: ''
+  });
 
   useEffect(() => {
     // Fetch assistants on component mount
@@ -58,10 +65,11 @@ const TeacherDashboard = () => {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
         setShowPopup(false);
+        setShowWAPopup(false);
       }
     };
 
-    if (showPopup) {
+    if (showPopup || showWAPopup) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -70,7 +78,7 @@ const TeacherDashboard = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPopup]);
+  }, [showPopup, showWAPopup]);
 
   const handleAddAssistant = () => {
     setShowPopup(true);
@@ -81,6 +89,10 @@ const TeacherDashboard = () => {
   };
 
   const handleCreateAssistant = () => {
+    const checkedChannels = Object.entries(teacherInfo.channels)
+      .filter(([key, channel]) => channel?.profile?.is_connected && document.querySelector(`input[name="${key}"]`).checked)
+      .map(([key, channel]) => channel._id);
+
     fetch('http://127.0.0.1:5000/create_assistant', {
       method: 'POST',
       headers: {
@@ -91,7 +103,8 @@ const TeacherDashboard = () => {
         subject,
         class_name: className,
         about,
-        profile_picture: imageUrl
+        profile_picture: imageUrl,
+        connected_channels: checkedChannels 
       })
     })
     .then(response => response.json())
@@ -150,6 +163,67 @@ const TeacherDashboard = () => {
     navigate('/');
   };
 
+  const handleWAPopup = () => {
+    setShowWAPopup(true);
+  };
+
+  const handleEditWA = () => {
+    // setShowWAPopup(true);
+    // handleConnectWA();
+  };
+
+  const handleConnectWA = () => {
+    console.log('Connecting WhatsApp');
+    fetch('http://127.0.0.1:5000/create_channel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+      },
+      body: JSON.stringify({
+        name: 'whatsapp',
+        profile: teacherInfo.channels.whatsapp.profile
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.error) {
+        setShowWAPopup(false);
+        setTeacherInfo({
+          ...teacherInfo,
+          channels: {
+            ...teacherInfo.channels,
+            whatsapp: {
+              ...teacherInfo.channels.whatsapp,
+              profile: { ...teacherInfo.channels.whatsapp.profile, is_connected: true }
+            }
+          }
+        });
+        toastr.success('WhatsApp connected successfully');
+      } else {
+        toastr.error(data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error connecting WhatsApp:', error);
+      toastr.error('Error connecting WhatsApp', error);
+    });
+  };
+
+  const handleWAInputChange = (e) => {
+    const { name, value } = e.target;
+    setTeacherInfo({
+      ...teacherInfo,
+      channels: {
+        ...teacherInfo.channels,
+        whatsapp: {
+          ...teacherInfo.channels.whatsapp,
+          profile: { ...teacherInfo.channels.whatsapp.profile, [name]: value }
+        }
+      }
+    });
+  };
+
   return (
     <div className="teacher-dashboard w-full h-full">
       <div className="sidebar text-slate-800">
@@ -161,6 +235,7 @@ const TeacherDashboard = () => {
         <div className="links mt-2">
           <a href="#" className="link bg-teal-100 text-slate-800 p-2 text-left pl-4">Assistants</a>
           <button className="add-assistant-button mt-4 w-3/4 mx-auto rounded-md bg-teal-600 text-white hover:bg-teal-700" onClick={handleAddAssistant}>Add Assistant</button>
+          <div className='text-center text-sm text-gray-500 w-3/4 mx-auto border border-slate-800 rounded-md p-2 hover:cursor-pointer' onClick={handleWAPopup}>Whatsapp: {teacherInfo.channels?.whatsapp?.profile?.phone_number ?? 'Not Connected'}</div>
         </div>
         <div className="bottom-links mb-2">
           <a href="#" className="link text-left flex items-center pl-4 hover:bg-teal-100"><FontAwesomeIcon icon={faCrown} className="text-teal-600" />   Upgrade</a>
@@ -181,7 +256,7 @@ const TeacherDashboard = () => {
           ))}
         </div>
         {showPopup && (
-          <div className="modal">
+          <div className="modal text-base">
             <div className="modal-content" ref={popupRef}>
               <span className="close" onClick={handleClosePopup}>&times;</span>
               <h2 className="modal-title text-slate-800 text-center mb-4">Create Assistant</h2>
@@ -211,9 +286,47 @@ const TeacherDashboard = () => {
                 About:
                 <textarea value={about} onChange={(e) => setAbout(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
               </label>
+
               
+              <h3 class="text-sm font-bold text-slate-500 text-left">Connected Channels:</h3>
+              {Object.entries(teacherInfo.channels).map(([key, channel]) => (
+                channel?.profile?.is_connected && (
+                <div className="modal-label text-slate-800 text-left flex flex-row">
+                  <input type="checkbox" name={key} className='w-2/12 accent-teal-600'  value={channel?._id}  />
+                  <p className='ml-2 w-10/12'>{key.charAt(0).toUpperCase() + key.slice(1)}</p>
+                </div>
+                )
+              ))}
+
               {uploadProgress > 0 && <progress value={uploadProgress} max="100">{uploadProgress}%</progress>}
               <button onClick={handleCreateAssistant} className="modal-button w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white rounded-md">Create Assistant</button>
+            </div>
+          </div>
+        )}
+
+        {showWAPopup && (
+          <div className="modal text-base">
+            <div className="modal-content" ref={popupRef}>
+              <span className="close" onClick={() => setShowWAPopup(false)}>&times;</span>
+              <h2 className="modal-title text-slate-800 text-center mb-4">Connect WhatsApp</h2>
+              <label className="modal-label text-slate-800 text-left">
+                WhatsApp Number:
+                <input type="text" name="phone_number" value={teacherInfo.channels?.whatsapp?.profile?.phone_number} onChange={handleWAInputChange} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              <label className="modal-label text-slate-800 text-left">
+                App Id:
+                <input type="text" name="app_id" value={teacherInfo.channels?.whatsapp?.profile?.app_id} onChange={handleWAInputChange} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              <label className="modal-label text-slate-800 text-left">
+                App Secret:
+                <input type="text" name="app_secret" value={teacherInfo.channels?.whatsapp?.profile?.app_secret} onChange={handleWAInputChange} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              <label className="modal-label text-slate-800 text-left">
+                Access Token:
+                <input type="text" name="access_token" value={teacherInfo.channels?.whatsapp?.profile?.access_token} onChange={handleWAInputChange} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              
+              <button className="modal-button w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white rounded-md" onClick={teacherInfo.channels.whatsapp ? handleEditWA : handleConnectWA}>{teacherInfo.channels.whatsapp ? 'Edit' : 'Connect'} WhatsApp</button>
             </div>
           </div>
         )}

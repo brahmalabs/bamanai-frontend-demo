@@ -162,8 +162,8 @@
   margin: 10px 0;
 }
 
-.modal-content input {
-  width: 100%;
+.modal-content input:not([type="checkbox"]) {
+  /* width: 100%; */
   padding: 8px;
   margin: 5px 0 10px 0;
   display: inline-block;

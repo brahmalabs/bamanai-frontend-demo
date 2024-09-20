@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './Chat.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faEdit, faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faEdit, faArrowLeft, faPlus, faFileAlt, faCopy, facli, faClipboard, faUpload, faDownload } from '@fortawesome/free-solid-svg-icons';
+import toastr from 'toastr';
 
 const Chat = () => {
   const { assistant_id, conversation_id } = useParams();
@@ -149,6 +150,11 @@ const Chat = () => {
     navigate(`/chat/${assistant_id}/${conversationId}`);
   };
 
+  const handleCopyClick = (content) => {
+    navigator.clipboard.writeText(content);
+    toastr.success('Copied to clipboard');
+  };
+
   return (
     <>
     <div className='text-slate-800 flex flex-row justify-between w-full border-b-2 border-teal-600 pb-2 pl-4 pt-2'>
@@ -170,17 +176,33 @@ const Chat = () => {
           <div onClick={handleNewConversation} className="text-base font-bold hover:cursor-pointer bg-teal-600 text-white rounded-md px-2 py-1"> <FontAwesomeIcon icon={faPlus} /> New Conversation </div>
         </div>
         <div className="chat-window">
-          {messages.map((msg, index) => (
-            <div key={index} className={`chat-message ${msg.sender}`}>
-              {msg.content}
+          {messages.length === 0 ? (
+            <div className="assistant-info text-center">
+              <img src={assistantData?.profile_picture || 'https://robohash.org/bamanai'} alt="Assistant" className="w-24 h-24 rounded-full mx-auto" />
+              <h2 className="text-2xl font-bold mt-4">{assistantData?.teacher}</h2>
+              <p className="text-lg">( {assistantData?.subject} | {assistantData?.class_name} )</p>
+              <p className="mt-2 text-slate-500 text-base">{assistantData?.about}</p>
+              <p className="mt-4 text-teal-600">Welcome! How can I assist you today?</p>
             </div>
-          ))}
+          ) : (
+            messages.map((msg, index) => (
+              <div key={index} className={`chat-message text-left text-slate-800 ${msg.sender == 'user' ? 'text-lg bg-teal-100' : 'text-base bg-slate-100' } `}>
+                <p className='text-slate-500 text-sm font-bold mb-1'> {msg.sender == 'user' ? 'You' : assistantData?.teacher} </p>
+                <p> {msg.content} </p>
+                {msg.sender == 'assistant' && (
+                  <div className='text-slate-500 text-sm font-bold mt-1 text-right hover:cursor-pointer'> <FontAwesomeIcon icon={faCopy} onClick={() => handleCopyClick(msg.content)} /> </div>
+                )}
+              </div>
+            ))
+          )}
           <div ref={chatEndRef} />
         </div>
-        <div className="chat-input text-black">
-          <input
-            type="text"
+        <div className="chat-input text-slate-800 text-base">
+          <FontAwesomeIcon icon={faUpload} className='p-2 text-xl text-slate-500 hover:cursor-pointer' />
+          <textarea
             value={message}
+            className='w-full p-2 border border-slate-500 rounded-md'
+            rows={1}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message..."
           />
@@ -189,50 +211,96 @@ const Chat = () => {
       </div>
       <div className="reference-section">
         <div className="tab-switcher">
-          <button onClick={() => setShowOwnContent(true)}>Own Content</button>
-          <button onClick={() => setShowOwnContent(false)}>Supporting Content</button>
+          <button
+            onClick={() => setShowOwnContent(true)}
+            className={`w-1/2 p-2 rounded-l-md border-2 text-base font-bold border-teal-600 ${showOwnContent ? 'active text-white bg-teal-600' : ''}`}
+          >
+            Teacher's Content
+          </button>
+          <button
+            onClick={() => setShowOwnContent(false)}
+            className={`w-1/2 p-2 rounded-r-md border-2 text-base font-bold border-teal-600 ${!showOwnContent ? 'active text-white bg-teal-600' : ''}`}
+          >
+            Supporting Content
+          </button>
         </div>
-        <div className="references">
+        <div className="references text-left overflow-scroll">
           {showOwnContent ? (
             ownReferences.map((ref, index) => (
-              <div key={index} className="reference-card" onClick={() => handleReferenceClick(ref)}>
-                <h3>{ref.title}</h3>
-                <p>{ref.short_summary}</p>
+              <div key={index} className="reference-card border border-slate-500 rounded-md p-2 m-2 hover:cursor-pointer" onClick={() => handleReferenceClick(ref)}>
+                <h3 className='text-base text-slate-500 font-bold'>{ref.digest.title}</h3>
+                <p className='text-sm text-slate-800'>{ref.digest.short_summary}</p>
+                <p className='text-xs italic text-slate-500'>{ref.content.title}</p>
               </div>
             ))
           ) : (
             supportedReferences.map((ref, index) => (
-              <div key={index} className="reference-card" onClick={() => handleReferenceClick(ref)}>
-                <h3>{ref.title}</h3>
-                <p>{ref.short_summary}</p>
+              <div key={index} className="reference-card border border-slate-500 rounded-md p-2 m-2 hover:cursor-pointer" onClick={() => handleReferenceClick(ref)}>
+                <h3 className='text-base text-slate-500 font-bold'>{ref.digest.title}</h3>
+                <p className='text-sm text-slate-800'>{ref.digest.short_summary}</p>
+                <p className='text-xs italic text-slate-500'>{ref.content.title}</p>
               </div>
             ))
           )}
         </div>
       </div>
       {showPopup && (
-        <div className="popup-overlay" onClick={closePopup}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <button className="close-button" onClick={closePopup}>Close</button>
-            <h2>{popupContent.title}</h2>
-            <p>{popupContent.content}</p>
+        <div className="popup-overlay text-slate-800" onClick={closePopup}>
+          <div className="popup-content text-left" onClick={(e) => e.stopPropagation()}>
+            <button className="close-button-a bg-slate-600 rounded-full w-6 h-6 p-0 m-0 text-center text-base text-white hover:bg-slate-500" onClick={closePopup}> X </button>
+            <h2 className='text-xl  font-bold'>{popupContent.digest.title}</h2>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Short Summary <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.short_summary)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.short_summary}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Long Summary <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.long_summary)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.long_summary}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Topics <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.topics.join(', '))} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.topics.join(', ')}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Keywords <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.keywords.join(', '))} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.keywords.join(', ')}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Questions <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.questions.join(', '))} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.questions.join(', ')}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Full Text <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.digest.content)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.digest.content}</p>
+            <h3 className='text-base mt-4 italic font-bold text-slate-500'>Original Full Content</h3>
+            <h2 className='text-xl  font-bold'>{popupContent.content.title}</h2>
+            <p className='text-sm text-slate-500'>
+              {popupContent.content.fileUrl} 
+              <a href={popupContent.content.fileUrl} className='ms-2' download>
+                <FontAwesomeIcon icon={faDownload} className='rounded-full hover:cursor-pointer align-baseline' />
+              </a>
+            </p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Short Summary <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.short_summary)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.short_summary}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Long Summary <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.long_summary)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.long_summary}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Topics <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.topics?.join(', ') || 'N/A')} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.topics?.join(', ') || 'N/A'}</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Keywords <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.keywords?.join(', ') || 'N/A')} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.keywords?.join(', ') || 'N/A' }</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Questions <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.questions?.join(', ') || 'N/A')} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.questions?.join(', ') || 'N/A' }</p>
+            <p className='text-sm font-bold text-slate-500 mt-2'>Full text <FontAwesomeIcon icon={faCopy} className='text-slate-500 float-right me-2 hover:cursor-pointer' onClick={() => handleCopyClick(popupContent.content.content)} /></p>
+            <p className='text-base text-slate-800'>{popupContent.content.content}</p>
           </div>
         </div>
       )}
       {showSidebar && (
-        <div ref={sidebarRef} className="fixed top-0 left-0 h-full w-1/3 bg-white shadow-lg z-50">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-base text-slate-500 font-bold mb-0">Previous Conversations</h2>
-            <button onClick={() => setShowSidebar(false)} className=" mb-0 ms-2 rounded-full bg-slate-200 p-1 text-slate-500 hover:text-slate-700">X</button>
+        <>
+          <div ref={sidebarRef} className="fixed top-0 left-0 h-full w-1/3 bg-white shadow-lg z-50">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-base text-slate-500 font-bold mb-0">Previous Conversations</h2>
+              <button onClick={() => setShowSidebar(false)} className=" mb-0 ms-2 rounded-full bg-slate-200 p-1 text-slate-500 hover:text-slate-700">X</button>
+            </div>
+            <div className="p-4">
+              {conversations.map((conv) => (
+                <div key={conv.id} className="p-2 text-base text-left hover:bg-gray-100 cursor-pointer" onClick={() => handleConversationClick(conv.id)}>
+                  {conv.title}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="p-4">
-            {conversations.map((conv) => (
-              <div key={conv.id} className="p-2 text-base text-left hover:bg-gray-100 cursor-pointer" onClick={() => handleConversationClick(conv.id)}>
-                {conv.title}
-              </div>
-            ))}
-          </div>
-        </div>
+          <div className="fixed top-0 left-0 w-full h-full bg-black opacity-50 z-40" onClick={() => setShowSidebar(false)}></div>
+        </> 
       )}
     </div>
     </>
