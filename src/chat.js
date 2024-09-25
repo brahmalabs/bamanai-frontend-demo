@@ -4,6 +4,7 @@ import './Chat.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleDown, faEdit, faArrowLeft, faPlus, faFileAlt, faCopy, facli, faClipboard, faUpload, faDownload } from '@fortawesome/free-solid-svg-icons';
 import toastr from 'toastr';
+import { API_URL } from './config';
 
 const Chat = () => {
   const { assistant_id, conversation_id } = useParams();
@@ -55,7 +56,7 @@ const Chat = () => {
   }, [showSidebar]);
 
   const getStudentInfo = async () => {
-    const response = await fetch('http://127.0.0.1:5000/get_student_info', {
+    const response = await fetch(`${API_URL}/get_student_info`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -65,7 +66,7 @@ const Chat = () => {
   };
 
   const getAssistantData = async () => {
-    const response = await fetch(`http://127.0.0.1:5000/get_student_assistant/${assistant_id}`, {
+    const response = await fetch(`${API_URL}/get_student_assistant/${assistant_id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -75,7 +76,7 @@ const Chat = () => {
   };
 
   const fetchConversations = async () => {
-    const response = await fetch(`http://127.0.0.1:5000/get_conversations/${assistant_id}`, {
+    const response = await fetch(`${API_URL}/get_conversations/${assistant_id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -85,7 +86,7 @@ const Chat = () => {
   };
 
   const fetchConversation = async (conversationId) => {
-    const response = await fetch(`http://127.0.0.1:5000/get_conversation/${conversationId}`, {
+    const response = await fetch(`${API_URL}/get_conversation/${conversationId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -102,7 +103,7 @@ const Chat = () => {
   };
 
   const handleSendMessage = async () => {
-    const response = await fetch('http://127.0.0.1:5000/chat', {
+    const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

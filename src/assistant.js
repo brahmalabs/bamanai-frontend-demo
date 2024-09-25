@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faAngleDown, faTrash, faInfoCircle, faLink, faDownload } from '@fortawesome/free-solid-svg-icons';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import { API_URL, UPLOAD_URL, APP_URL } from './config';
 
 const Assistant = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const Assistant = () => {
   const editPopupRef = useRef(null);
   const [teacherInfo, setTeacherInfo] = useState(null);
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/get_assistant/${id}`, {
+    fetch(`${API_URL}/get_assistant/${id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -46,7 +47,7 @@ const Assistant = () => {
       toastr.error('Error fetching assistant:', error);
     });
 
-    fetch(`http://127.0.0.1:5000/get_teacher_info`, {
+    fetch(`${API_URL}/get_teacher_info`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -63,7 +64,7 @@ const Assistant = () => {
 
   const handleAddStudent = () => {
     if (studentId && studentId !== '' && assistant) {
-      fetch('http://127.0.0.1:5000/add_student_to_assistant', {
+      fetch(`${API_URL}/add_student_to_assistant`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ const Assistant = () => {
   };
 
   const handleRemoveStudent = (student) => {
-    fetch('http://127.0.0.1:5000/remove_student_from_assistant', {
+    fetch(`${API_URL}/remove_student_from_assistant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ const Assistant = () => {
   };
 
   const digestFile = async (fileUrl) => {
-    const response = await fetch('http://127.0.0.1:5000/digest', {
+    const response = await fetch(`${API_URL}/digest`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -146,7 +147,7 @@ const Assistant = () => {
   };
 
   const handleDeleteFile = (contentId) => {
-    fetch('http://127.0.0.1:5000/delete_file', {
+    fetch(`${API_URL}/delete_file`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -173,11 +174,16 @@ const Assistant = () => {
 
   const onDrop = (acceptedFiles) => {
     acceptedFiles.forEach(file => {
+      
+      // const acceptedFormats = ['image/jpeg', 'image/png', 'image/jpg']
+      // const isFileValid = file && acceptedFormats.includes(file.type)
+      // if (!isFileValid) { return toastr.error('Invalid file type');  }
+
       setIsUploading(true);
       const formData = new FormData();
       formData.append('files', file);
 
-      fetch('http://localhost:8888/upload', {
+      fetch(UPLOAD_URL, {
         method: 'POST',
         body: formData
       })
@@ -211,7 +217,7 @@ const Assistant = () => {
     const formData = new FormData();
     formData.append('files', file);
 
-    fetch('http://localhost:8888/upload', {
+    fetch(UPLOAD_URL, {
       method: 'POST',
       body: formData
     })
@@ -235,9 +241,9 @@ const Assistant = () => {
   const handleSaveEdit = () => {
     const checkedChannels = Object.entries(teacherInfo.channels)
       .filter(([key, channel]) => channel?.profile?.is_connected && document.querySelector(`input[name="${key}"]`).checked)
-      .map(([key, channel]) => channel._id);
+      .map(([key, channel]) => channel.id);
 
-    fetch(`http://127.0.0.1:5000/edit_assistant/${id}`, {
+    fetch(`${API_URL}/edit_assistant/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -314,8 +320,8 @@ const Assistant = () => {
 
     setAssistant(prev => {
       const updatedChannels = isChecked
-        ? [...prev.connected_channels, {name, '_id': channelId}]
-        : prev.connected_channels.filter(channel => channel._id != channelId);
+        ? [...prev.connected_channels, {name, 'id': channelId}]
+        : prev.connected_channels.filter(channel => channel.id != channelId);
 
       return {
         ...prev,
@@ -354,7 +360,7 @@ const Assistant = () => {
                 </div>
               </div>
             </h3>
-            <div {...getRootProps({ className: 'dropzone border-2 border-dashed border-teal-600 rounded-md p-4 mb-2 h-2 text-sm p-0' })}>
+            <div onClick={e => e.stopPropagation()} {...getRootProps({ className: 'dropzone border-2 border-dashed border-teal-600 rounded-md p-4 mb-2 h-2 text-sm p-0' })}>
               <input {...getInputProps()} />
               <p>Drag 'n' drop some files here, or click to select files</p>
             </div>
@@ -438,9 +444,9 @@ const Assistant = () => {
           <div className="modal-content" ref={editPopupRef}>
             <span className="close" onClick={() => setShowEditPopup(false)}>&times;</span>
             <h2 className="modal-title text-slate-800 text-center mb-4">Edit Assistant</h2>
-            <label className="modal-label text-slate-800 text-left">  
+            <div className="modal-label text-slate-800 text-left">  
               Profile Picture:
-              <div {...getEditImageRootProps({ className: 'dropzone' })} className="dropzone border-2 border-teal-600 rounded-md p-4">
+              <div {...getEditImageRootProps({ className: 'dropzone' })} onClick={e => e.stopPropagation()} className="dropzone border-2 border-teal-600 rounded-md p-4">
                 <input {...getEditImageInputProps()} />
                 {editImageUrl ? (
                   <div className="uploaded-image">
@@ -451,7 +457,7 @@ const Assistant = () => {
                   <p>Drag 'n' drop an image here, or click to select one</p>
                 )}
               </div>
-            </label>
+            </div>
             <label className="modal-label text-slate-800 text-left">
               Subject:
               <input type="text" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
@@ -472,8 +478,8 @@ const Assistant = () => {
                     type="checkbox"
                     name={key}
                     className='w-2/12 accent-teal-600'
-                    checked={assistant.connected_channels.map(c => c._id).includes(channel?._id)}
-                    value={channel?._id}
+                    checked={assistant.connected_channels.map(c => c.id).includes(channel?.id)}
+                    value={channel?.id}
                     onChange={handleChannelChange}
                   />
                   <p className='ml-2 w-10/12'>{key.charAt(0).toUpperCase() + key.slice(1)}</p>

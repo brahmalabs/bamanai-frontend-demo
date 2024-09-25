@@ -7,6 +7,7 @@ import './TeacherDashboard.css';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
 import moment from 'moment'; // Import moment.js for date formatting
+import { API_URL, UPLOAD_URL, APP_URL } from './config';
 
 const TeacherDashboard = () => {
   const [assistants, setAssistants] = useState([]);
@@ -20,16 +21,16 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const popupRef = useRef(null);
   const [showWAPopup, setShowWAPopup] = useState(false);
-  const [waFormData, setWaFormData] = useState({
-    phone_number: '',
-    app_id: '',
-    app_secret: '',
-    access_token: ''
-  });
+  const [hasWhatsApp, setHasWhatsApp] = useState(false);
+  const [showTelegramPopup, setShowTelegramPopup] = useState(false);
+  const [telegramUsername, setTelegramUsername] = useState('');
+  const [telegramAccessKey, setTelegramAccessKey] = useState('');
+  const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
+
 
   useEffect(() => {
     // Fetch assistants on component mount
-    fetch('http://127.0.0.1:5000/get_assistants', {
+    fetch(`${API_URL}/get_assistants`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -45,7 +46,7 @@ const TeacherDashboard = () => {
     });
 
     // Fetch teacher info
-    fetch('http://127.0.0.1:5000/get_teacher_info', {
+    fetch(`${API_URL}/get_teacher_info`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
       }
@@ -53,6 +54,13 @@ const TeacherDashboard = () => {
     .then(response => response.json())
     .then(data => {
       setTeacherInfo(data.teacher);
+      if (data.teacher.channels?.whatsapp && data.teacher.channels?.whatsapp?.profile?.is_connected) {
+        setHasWhatsApp(true);
+      }
+      if (data.teacher.channels?.telegram && data.teacher.channels?.telegram?.profile?.is_connected) {
+        setTelegramUsername(data.teacher.channels?.telegram?.profile?.username);
+        setTelegramAccessKey(data.teacher.channels?.telegram?.profile?.access_key);
+      }
       // toastr.success('Teacher info fetched successfully');
     })
     .catch(error => {
@@ -66,10 +74,11 @@ const TeacherDashboard = () => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
         setShowPopup(false);
         setShowWAPopup(false);
+        setShowTelegramPopup(false);
       }
     };
 
-    if (showPopup || showWAPopup) {
+    if (showPopup || showWAPopup || showTelegramPopup) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -78,7 +87,7 @@ const TeacherDashboard = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPopup, showWAPopup]);
+  }, [showPopup, showWAPopup, showTelegramPopup]);
 
   const handleAddAssistant = () => {
     setShowPopup(true);
@@ -93,7 +102,7 @@ const TeacherDashboard = () => {
       .filter(([key, channel]) => channel?.profile?.is_connected && document.querySelector(`input[name="${key}"]`).checked)
       .map(([key, channel]) => channel._id);
 
-    fetch('http://127.0.0.1:5000/create_assistant', {
+    fetch(`${API_URL}/create_assistant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -124,12 +133,18 @@ const TeacherDashboard = () => {
   };
 
   const onDrop = (acceptedFiles) => {
+
+    if (isFilePickerOpen) {
+      console.warn('File picker is already open');
+      return;
+    }
+    setIsFilePickerOpen(true);
     const file = acceptedFiles[0];
     const formData = new FormData();
     const blob = new Blob([file], { type: file.type });
     formData.set('files', blob, file.name);
 
-    fetch('http://localhost:8888/upload', {
+    fetch(`${UPLOAD_URL}`, {
       method: 'POST',
       body: formData,
       onUploadProgress: (progressEvent) => {
@@ -168,13 +183,46 @@ const TeacherDashboard = () => {
   };
 
   const handleEditWA = () => {
-    // setShowWAPopup(true);
-    // handleConnectWA();
+    fetch(`${API_URL}/edit_channel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+      },
+      body: JSON.stringify({
+        name: 'whatsapp',
+        profile: teacherInfo.channels.whatsapp.profile,
+        id: teacherInfo.channels.whatsapp.id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.error) {
+        setShowWAPopup(false);
+        setTeacherInfo({
+          ...teacherInfo,
+          channels: {
+            ...teacherInfo.channels,
+            whatsapp: {
+              ...teacherInfo.channels.whatsapp,
+              profile: { ...teacherInfo.channels.whatsapp.profile, is_connected: true }
+            }
+          }
+        });
+        toastr.success('WhatsApp updated successfully');
+      } else {
+        toastr.error(data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating WhatsApp:', error);
+      toastr.error('Error updating WhatsApp', error);
+    });
   };
 
   const handleConnectWA = () => {
     console.log('Connecting WhatsApp');
-    fetch('http://127.0.0.1:5000/create_channel', {
+    fetch(`${API_URL}/create_channel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -218,9 +266,97 @@ const TeacherDashboard = () => {
         ...teacherInfo.channels,
         whatsapp: {
           ...teacherInfo.channels.whatsapp,
-          profile: { ...teacherInfo.channels.whatsapp.profile, [name]: value }
+          profile: { ...teacherInfo.channels?.whatsapp?.profile, [name]: value }
         }
       }
+    });
+  };
+
+  const handleTelegramPopup = () => {
+    setShowTelegramPopup(true);
+  };
+
+  const handleCloseTelegramPopup = () => {
+    setShowTelegramPopup(false);
+  };
+
+  const handleConnectTelegram = () => {
+    fetch(`${API_URL}/create_channel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+      },
+      body: JSON.stringify({
+        name: 'telegram',
+        profile: {
+          username: telegramUsername,
+          access_key: telegramAccessKey
+        }
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.error) {
+        setShowTelegramPopup(false);
+        setTeacherInfo({
+          ...teacherInfo,
+          channels: {
+            ...teacherInfo.channels,
+            telegram: {
+              profile: { username: telegramUsername, access_key: telegramAccessKey, is_connected: true }
+            }
+          }
+        });
+        toastr.success('Telegram connected successfully');
+      } else {
+        toastr.error(data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error connecting Telegram:', error);
+      toastr.error('Error connecting Telegram', error);
+    });
+  };
+
+  const handleEditTelegram = () => {
+    fetch(`${API_URL}/edit_channel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+      },
+      body: JSON.stringify({
+        name: 'telegram',
+        profile: {
+          username: telegramUsername,
+          access_key: telegramAccessKey
+        },
+        id: teacherInfo.channels.telegram.id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.error) {
+        setShowTelegramPopup(false);
+        setTeacherInfo({
+          ...teacherInfo,
+          channels: {
+            ...teacherInfo.channels,
+            telegram: {
+              ...teacherInfo.channels.telegram,
+              profile: { username: telegramUsername, access_key: telegramAccessKey, is_connected: true }
+            }
+          }
+        });
+        toastr.success('Telegram updated successfully');
+      } else {
+        toastr.error(data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating Telegram:', error);
+      toastr.error('Error updating Telegram', error);
     });
   };
 
@@ -235,7 +371,8 @@ const TeacherDashboard = () => {
         <div className="links mt-2">
           <a href="#" className="link bg-teal-100 text-slate-800 p-2 text-left pl-4">Assistants</a>
           <button className="add-assistant-button mt-4 w-3/4 mx-auto rounded-md bg-teal-600 text-white hover:bg-teal-700" onClick={handleAddAssistant}>Add Assistant</button>
-          <div className='text-center text-sm text-gray-500 w-3/4 mx-auto border border-slate-800 rounded-md p-2 hover:cursor-pointer' onClick={handleWAPopup}>Whatsapp: {teacherInfo.channels?.whatsapp?.profile?.phone_number ?? 'Not Connected'}</div>
+          <div className='mt-4 text-center text-sm text-gray-500 w-3/4 mx-auto border border-slate-800 rounded-md p-2 hover:cursor-pointer' onClick={handleWAPopup}>Whatsapp: {teacherInfo.channels?.whatsapp?.profile?.phone_number ?? 'Not Connected'}</div>
+          <div className='mt-4 text-center text-sm text-gray-500 w-3/4 mx-auto border border-slate-800 rounded-md p-2 hover:cursor-pointer' onClick={handleTelegramPopup}>Telegram: {teacherInfo.channels?.telegram?.profile?.username ?? 'Not Connected'}</div>
         </div>
         <div className="bottom-links mb-2">
           <a href="#" className="link text-left flex items-center pl-4 hover:bg-teal-100"><FontAwesomeIcon icon={faCrown} className="text-teal-600" />   Upgrade</a>
@@ -260,7 +397,7 @@ const TeacherDashboard = () => {
             <div className="modal-content" ref={popupRef}>
               <span className="close" onClick={handleClosePopup}>&times;</span>
               <h2 className="modal-title text-slate-800 text-center mb-4">Create Assistant</h2>
-              <label className="modal-label text-slate-800 text-left">  
+              <div className="modal-label text-slate-800 text-left">  
                 Profile Picture:
                 <div {...getRootProps({ className: 'dropzone' })} className="dropzone border-2 border-teal-600 rounded-md p-4">
                   <input {...getInputProps()} />
@@ -273,7 +410,7 @@ const TeacherDashboard = () => {
                     <p>Drag 'n' drop an image here, or click to select one</p>
                   )}
                 </div>
-              </label>
+              </div>
               <label className="modal-label text-slate-800 text-left">
                 Subject:
                 <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
@@ -288,7 +425,7 @@ const TeacherDashboard = () => {
               </label>
 
               
-              <h3 class="text-sm font-bold text-slate-500 text-left">Connected Channels:</h3>
+              <h3 className="text-sm font-bold text-slate-500 text-left">Connected Channels:</h3>
               {Object.entries(teacherInfo.channels).map(([key, channel]) => (
                 channel?.profile?.is_connected && (
                 <div className="modal-label text-slate-800 text-left flex flex-row">
@@ -326,7 +463,27 @@ const TeacherDashboard = () => {
                 <input type="text" name="access_token" value={teacherInfo.channels?.whatsapp?.profile?.access_token} onChange={handleWAInputChange} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
               </label>
               
-              <button className="modal-button w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white rounded-md" onClick={teacherInfo.channels.whatsapp ? handleEditWA : handleConnectWA}>{teacherInfo.channels.whatsapp ? 'Edit' : 'Connect'} WhatsApp</button>
+              <button className="modal-button w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white rounded-md" onClick={hasWhatsApp ? handleEditWA : handleConnectWA}>{hasWhatsApp ? 'Edit' : 'Connect'} WhatsApp</button>
+            </div>
+          </div>
+        )}
+
+        {showTelegramPopup && (
+          <div className="modal text-base">
+            <div className="modal-content" ref={popupRef}>
+              <span className="close" onClick={handleCloseTelegramPopup}>&times;</span>
+              <h2 className="modal-title text-slate-800 text-center mb-4">Connect Telegram</h2>
+              <label className="modal-label text-slate-800 text-left">
+                Telegram Username:
+                <input type="text" name="username" value={telegramUsername} onChange={(e) => setTelegramUsername(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              <label className="modal-label text-slate-800 text-left">
+                Access Key:
+                <input type="text" name="access_key" value={telegramAccessKey} onChange={(e) => setTelegramAccessKey(e.target.value)} className="w-full p-2 border border-teal-600 outline-teal-600 rounded-md" />
+              </label>
+              <button className="modal-button w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white rounded-md" onClick={teacherInfo.channels?.telegram?.profile?.is_connected ? handleEditTelegram : handleConnectTelegram}>
+                {teacherInfo.channels?.telegram?.profile?.is_connected ? 'Edit' : 'Connect'} Telegram
+              </button>
             </div>
           </div>
         )}
