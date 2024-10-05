@@ -75,7 +75,7 @@ const Welcome = () => {
         </div>
         <footer className="absolute bottom-0 w-full text-center py-4 bg-gray-100">
           <p className="text-sm text-gray-600">
-            An <a href="https://github.com/brahmalabs/baman-ai" target="_blank" className="text-teal-600">Open Source</a> Experiment by <img src="https://brahma-labs.com/img/logo-royal-blue.png" alt="Brahma Labs" className="inline h-4 mx-1" /> Brahma Labs
+            An <a href="https://github.com/brahmalabs/baman-ai" target="_blank" className="text-teal-600">Open Source</a> Experiment by <img src="https://brahma-labs.com/img/logo-royal-blue.png" alt="Brahma Labs" className="inline h-4 mx-1" /> <a href='https://brahma-labs.com' target="_blank" className='text-teal-600'>Brahma Labs</a>
           </p>
         </footer>
       </div>

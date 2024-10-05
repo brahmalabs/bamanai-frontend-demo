@@ -1,5 +1,5 @@
 // Config file for the frontend
 
-export const API_URL = "http://127.0.0.1:5000";
-export const UPLOAD_URL = "http://localhost:8888/upload";
-export const APP_URL = "http://127.0.0.1:3000";
+export const API_URL = "https://bamanai.brahma-labs.com";
+export const UPLOAD_URL = "https://mayabot.brahma-labs.com/upload";
+export const APP_URL = "https://baman.brahma-labs.com";
